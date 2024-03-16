@@ -10,19 +10,65 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
-    var itemArray = ["Find Mike", "Buy Eggs", "Destroy Demogorgon"]
+    var itemArray: [Item] = [Item(title: "Find Mike"),
+                             Item(title: "Buy Eggs"),
+                             Item(title: "Destroy Demogorgon"),
+                             Item(title: "a"),
+                             Item(title: "b"),
+                             Item(title: "c"),
+                             Item(title: "d"),
+                             Item(title: "e"),
+                             Item(title: "f"),
+                             Item(title: "g"),
+                             Item(title: "h"),
+                             Item(title: "i"),
+                             Item(title: "j"),
+                             Item(title: "k"),
+                             Item(title: "l"),
+                             Item(title: "m"),
+                             Item(title: "n"),
+                             Item(title: "o"),
+                             Item(title: "p"),
+                             Item(title: "q"),
+                             Item(title: "r"),
+                             Item(title: "s"),
+                             Item(title: "t"),
+                             Item(title: "u"),
+                             Item(title: "v"),
+                             Item(title: "w"),
+                             Item(title: "x"),
+                             Item(title: "y"),
+                             Item(title: "z")]
+
+    let defaults = UserDefaults.standard
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+
+        if let data = defaults.array(forKey: "TodoListArray") as? [Item] {
+            itemArray = data
+        }
     }
 
     override func tableView(_ tableView: UITableView, 
                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
         var content = cell.defaultContentConfiguration()
-        content.text = itemArray[indexPath.row]
+//        content.text = itemArray[indexPath.row].title
+        if itemArray[indexPath.row].completionStatus {
+            let attributes = [
+                NSAttributedString.Key.strikethroughStyle : 2]
+            content.attributedText = NSAttributedString(string: itemArray[indexPath.row].title, attributes: attributes)
+            cell.contentConfiguration = content
 
+            cell.accessoryType = .checkmark
+        } else {
+            let attributes = [
+                NSAttributedString.Key.strikethroughStyle : 0]
+            content.attributedText = NSAttributedString(string: itemArray[indexPath.row].title, attributes: attributes)
+            cell.accessoryType = .none
+        }
         cell.contentConfiguration = content
         return cell
     }
@@ -34,23 +80,27 @@ class TodoListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         print(indexPath.row)
         let cell = tableView.cellForRow(at: indexPath)
-        
-        if cell?.accessoryType == .checkmark {
-            cell?.accessoryType = .none
-            var content = cell?.defaultContentConfiguration()
-            let attributes = [
-                NSAttributedString.Key.strikethroughStyle : 0]
-            content?.attributedText = NSAttributedString(string: itemArray[indexPath.row], attributes: attributes)
-            cell?.contentConfiguration = content
-        } else {
-            var content = cell?.defaultContentConfiguration()
-            let attributes = [
-                NSAttributedString.Key.strikethroughStyle : 2]
-            content?.attributedText = NSAttributedString(string: itemArray[indexPath.row], attributes: attributes)
-            cell?.contentConfiguration = content
-
-            cell?.accessoryType = .checkmark
-        }
+        itemArray[indexPath.row].completionStatus.toggle()
+//        if cell?.accessoryType == .checkmark {
+////            itemArray[indexPath.row].completionStatus = false
+//            cell?.accessoryType = .none
+//            var content = cell?.defaultContentConfiguration()
+//            let attributes = [
+//                NSAttributedString.Key.strikethroughStyle : 0]
+//            content?.attributedText = NSAttributedString(string: itemArray[indexPath.row].title, attributes: attributes)
+//            cell?.contentConfiguration = content
+//        } else {
+////            itemArray[indexPath.row].completionStatus = true
+//            var content = cell?.defaultContentConfiguration()
+//            let attributes = [
+//                NSAttributedString.Key.strikethroughStyle : 2]
+//            content?.attributedText = NSAttributedString(string: itemArray[indexPath.row].title, attributes: attributes)
+//            cell?.contentConfiguration = content
+//
+//            cell?.accessoryType = .checkmark
+//        }
+        tableView.reloadData()
+//        defaults.set(itemArray, forKey: "TodoListArray")
         // To get select/deselect appearance
         tableView.deselectRow(at: indexPath, animated: true)
     }
@@ -60,13 +110,15 @@ class TodoListViewController: UITableViewController {
         let alert = UIAlertController(title: "Add new todoey item", message: nil, preferredStyle: .alert)
         let action = UIAlertAction(title: "Add Item", style: .default) { [weak self] action in
             if let text = textField.text, !text.isEmpty {
-                self?.itemArray.append(text)
+                self?.itemArray.append(Item(title: text))
+                self?.defaults.set(self?.itemArray, forKey: "TodoListArray")
+                self?.tableView.reloadData()
             }
         }
 
         alert.addTextField { alertTextField in
-            textField = alertTextField
             alertTextField.placeholder = "Create new item"
+            textField = alertTextField
         }
         alert.addAction(action)
 
