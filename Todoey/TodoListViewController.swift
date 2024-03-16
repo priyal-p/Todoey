@@ -10,52 +10,21 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
-    var itemArray: [Item] = [Item(title: "Find Mike"),
-                             Item(title: "Buy Eggs"),
-                             Item(title: "Destroy Demogorgon"),
-                             Item(title: "a"),
-                             Item(title: "b"),
-                             Item(title: "c"),
-                             Item(title: "d"),
-                             Item(title: "e"),
-                             Item(title: "f"),
-                             Item(title: "g"),
-                             Item(title: "h"),
-                             Item(title: "i"),
-                             Item(title: "j"),
-                             Item(title: "k"),
-                             Item(title: "l"),
-                             Item(title: "m"),
-                             Item(title: "n"),
-                             Item(title: "o"),
-                             Item(title: "p"),
-                             Item(title: "q"),
-                             Item(title: "r"),
-                             Item(title: "s"),
-                             Item(title: "t"),
-                             Item(title: "u"),
-                             Item(title: "v"),
-                             Item(title: "w"),
-                             Item(title: "x"),
-                             Item(title: "y"),
-                             Item(title: "z")]
+    var itemArray: [Item] = []
 
-    let defaults = UserDefaults.standard
+    let defaultFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
 
-        if let data = defaults.array(forKey: "TodoListArray") as? [Item] {
-            itemArray = data
-        }
+        loadItems()
     }
 
     override func tableView(_ tableView: UITableView, 
                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
         var content = cell.defaultContentConfiguration()
-//        content.text = itemArray[indexPath.row].title
 
         // Update checkmark appearance
         cell.accessoryType = itemArray[indexPath.row].completionStatus ? .checkmark : .none
@@ -83,13 +52,13 @@ class TodoListViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         print(indexPath.row)
-        let cell = tableView.cellForRow(at: indexPath)
         itemArray[indexPath.row].completionStatus.toggle()
 
         // To update UI with updated task appearance.
         tableView.reloadData()
 
-//        defaults.set(itemArray, forKey: "TodoListArray")
+        // Update persistence storage with updated item status
+        saveItems()
 
         // To get select/deselect appearance
         tableView.deselectRow(at: indexPath, animated: true)
@@ -101,7 +70,10 @@ class TodoListViewController: UITableViewController {
         let action = UIAlertAction(title: "Add Item", style: .default) { [weak self] action in
             if let text = textField.text, !text.isEmpty {
                 self?.itemArray.append(Item(title: text))
-                self?.defaults.set(self?.itemArray, forKey: "TodoListArray")
+
+                // Update persistence storage with new item
+                self?.saveItems()
+
                 self?.tableView.reloadData()
             }
         }
@@ -113,6 +85,30 @@ class TodoListViewController: UITableViewController {
         alert.addAction(action)
 
         present(alert, animated: true, completion: nil)
+    }
+
+    private func saveItems() {
+        let encoder = PropertyListEncoder()
+        do {
+            let data = try encoder.encode(itemArray)
+            if let urlPath = defaultFilePath {
+                try data.write(to: urlPath)
+            }
+        } catch {
+            print("Error encoding item array.", error)
+        }
+    }
+
+    private func loadItems() {
+        if let urlPath = defaultFilePath {
+            do {
+                let data = try Data(contentsOf: urlPath)
+                let decoder = PropertyListDecoder()
+                itemArray = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("Error to load items from storage", error)
+            }
+        }
     }
 }
 
