@@ -56,20 +56,24 @@ class TodoListViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
         var content = cell.defaultContentConfiguration()
 //        content.text = itemArray[indexPath.row].title
+
+        // Update checkmark appearance
+        cell.accessoryType = itemArray[indexPath.row].completionStatus ? .checkmark : .none
+
+        // Update text appearance
         if itemArray[indexPath.row].completionStatus {
             let attributes = [
                 NSAttributedString.Key.strikethroughStyle : 2]
             content.attributedText = NSAttributedString(string: itemArray[indexPath.row].title, attributes: attributes)
             cell.contentConfiguration = content
-
-            cell.accessoryType = .checkmark
         } else {
             let attributes = [
                 NSAttributedString.Key.strikethroughStyle : 0]
             content.attributedText = NSAttributedString(string: itemArray[indexPath.row].title, attributes: attributes)
-            cell.accessoryType = .none
         }
+
         cell.contentConfiguration = content
+        
         return cell
     }
 
@@ -81,26 +85,12 @@ class TodoListViewController: UITableViewController {
         print(indexPath.row)
         let cell = tableView.cellForRow(at: indexPath)
         itemArray[indexPath.row].completionStatus.toggle()
-//        if cell?.accessoryType == .checkmark {
-////            itemArray[indexPath.row].completionStatus = false
-//            cell?.accessoryType = .none
-//            var content = cell?.defaultContentConfiguration()
-//            let attributes = [
-//                NSAttributedString.Key.strikethroughStyle : 0]
-//            content?.attributedText = NSAttributedString(string: itemArray[indexPath.row].title, attributes: attributes)
-//            cell?.contentConfiguration = content
-//        } else {
-////            itemArray[indexPath.row].completionStatus = true
-//            var content = cell?.defaultContentConfiguration()
-//            let attributes = [
-//                NSAttributedString.Key.strikethroughStyle : 2]
-//            content?.attributedText = NSAttributedString(string: itemArray[indexPath.row].title, attributes: attributes)
-//            cell?.contentConfiguration = content
-//
-//            cell?.accessoryType = .checkmark
-//        }
+
+        // To update UI with updated task appearance.
         tableView.reloadData()
+
 //        defaults.set(itemArray, forKey: "TodoListArray")
+
         // To get select/deselect appearance
         tableView.deselectRow(at: indexPath, animated: true)
     }
