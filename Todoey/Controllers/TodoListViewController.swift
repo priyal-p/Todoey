@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import CoreData
 
 class TodoListViewController: UITableViewController {
 
@@ -13,11 +14,15 @@ class TodoListViewController: UITableViewController {
 
     let defaultFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
 
+    lazy var coreDataContext: NSManagedObjectContext = {
+        return (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
 
-        loadItems()
+//        loadItems()
     }
 
     override func tableView(_ tableView: UITableView, 
@@ -32,12 +37,12 @@ class TodoListViewController: UITableViewController {
         if itemArray[indexPath.row].completionStatus {
             let attributes = [
                 NSAttributedString.Key.strikethroughStyle : 2]
-            content.attributedText = NSAttributedString(string: itemArray[indexPath.row].title, attributes: attributes)
+            content.attributedText = NSAttributedString(string: itemArray[indexPath.row].title ?? "", attributes: attributes)
             cell.contentConfiguration = content
         } else {
             let attributes = [
                 NSAttributedString.Key.strikethroughStyle : 0]
-            content.attributedText = NSAttributedString(string: itemArray[indexPath.row].title, attributes: attributes)
+            content.attributedText = NSAttributedString(string: itemArray[indexPath.row].title ?? "", attributes: attributes)
         }
 
         cell.contentConfiguration = content
@@ -66,15 +71,22 @@ class TodoListViewController: UITableViewController {
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         var textField = UITextField()
         let alert = UIAlertController(title: "Add new todoey item", message: nil, preferredStyle: .alert)
-        let action = UIAlertAction(title: "Add Item", style: .default) { [weak self] action in
-            if let text = textField.text, !text.isEmpty {
-                self?.itemArray.append(Item(title: text))
+        let action = UIAlertAction(title: "Add Item",
+                                   style: .default) { [weak self] action in
+            guard let self,
+                  let text = textField.text, !text.isEmpty
+            else { return }
 
-                // Update persistence storage with new item
-                self?.saveItems()
+            let item = Item(context: self.coreDataContext)
+            item.title = text
+            item.completionStatus = false
 
-                self?.tableView.reloadData()
-            }
+            self.itemArray.append(item)
+
+            // Update persistence storage with new item
+            self.saveItems()
+
+            self.tableView.reloadData()
         }
 
         alert.addTextField { alertTextField in
@@ -89,25 +101,22 @@ class TodoListViewController: UITableViewController {
     private func saveItems() {
         let encoder = PropertyListEncoder()
         do {
-            let data = try encoder.encode(itemArray)
-            if let urlPath = defaultFilePath {
-                try data.write(to: urlPath)
-            }
+            try coreDataContext.save()
         } catch {
-            print("Error encoding item array.", error)
+            print("❌ Error saving context", error.localizedDescription)
         }
     }
 
-    private func loadItems() {
-        if let urlPath = defaultFilePath {
-            do {
-                let data = try Data(contentsOf: urlPath)
-                let decoder = PropertyListDecoder()
-                itemArray = try decoder.decode([Item].self, from: data)
-            } catch {
-                print("Error to load items from storage", error)
-            }
-        }
-    }
+//    private func loadItems() {
+//        if let urlPath = defaultFilePath {
+//            do {
+//                let data = try Data(contentsOf: urlPath)
+//                let decoder = PropertyListDecoder()
+//                itemArray = try decoder.decode([Item].self, from: data)
+//            } catch {
+//                print("Error to load items from storage", error)
+//            }
+//        }
+//    }
 }
 
