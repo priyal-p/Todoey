@@ -24,7 +24,7 @@ class TodoListViewController: UITableViewController {
          /Users/priyalporwal/Library/Developer/CoreSimulator/Devices/4FA3F427-A7D1-4552-B942-E3491BB14A09/data/Containers/Data/Application/4E1D8E45-7F75-4D4D-A36C-59A7029090CA/Library/Application\ Support/DataModel.sqlite
          */
         print("CoreData DB Location", FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-//        loadItems()
+        loadItems()
     }
 
     override func tableView(_ tableView: UITableView, 
@@ -108,16 +108,13 @@ class TodoListViewController: UITableViewController {
         }
     }
 
-//    private func loadItems() {
-//        if let urlPath = defaultFilePath {
-//            do {
-//                let data = try Data(contentsOf: urlPath)
-//                let decoder = PropertyListDecoder()
-//                itemArray = try decoder.decode([Item].self, from: data)
-//            } catch {
-//                print("Error to load items from storage", error)
-//            }
-//        }
-//    }
+    private func loadItems() {
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        do {
+            itemArray = try coreDataContext.fetch(request)
+        } catch {
+            print("Error fetching data from context", error)
+        }
+    }
 }
 
