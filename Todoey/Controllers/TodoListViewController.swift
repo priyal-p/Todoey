@@ -12,8 +12,6 @@ class TodoListViewController: UITableViewController {
 
     var itemArray: [Item] = []
 
-    let defaultFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
-
     lazy var coreDataContext: NSManagedObjectContext = {
         return (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     }()
@@ -22,6 +20,10 @@ class TodoListViewController: UITableViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
 
+        /*
+         /Users/priyalporwal/Library/Developer/CoreSimulator/Devices/4FA3F427-A7D1-4552-B942-E3491BB14A09/data/Containers/Data/Application/4E1D8E45-7F75-4D4D-A36C-59A7029090CA/Library/Application\ Support/DataModel.sqlite
+         */
+        print("CoreData DB Location", FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
 //        loadItems()
     }
 
@@ -99,7 +101,6 @@ class TodoListViewController: UITableViewController {
     }
 
     private func saveItems() {
-        let encoder = PropertyListEncoder()
         do {
             try coreDataContext.save()
         } catch {
