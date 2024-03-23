@@ -12,6 +12,8 @@ class TodoListViewController: UITableViewController {
 
     var itemArray: [Item] = []
 
+    @IBOutlet weak var searchBar: UISearchBar!
+
     lazy var coreDataContext: NSManagedObjectContext = {
         return (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     }()
@@ -20,6 +22,7 @@ class TodoListViewController: UITableViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
 
+        searchBar.delegate = self
         /*
          /Users/priyalporwal/Library/Developer/CoreSimulator/Devices/4FA3F427-A7D1-4552-B942-E3491BB14A09/data/Containers/Data/Application/4E1D8E45-7F75-4D4D-A36C-59A7029090CA/Library/Application\ Support/DataModel.sqlite
          */
@@ -116,11 +119,35 @@ class TodoListViewController: UITableViewController {
 
     private func loadItems() {
         let request: NSFetchRequest<Item> = Item.fetchRequest()
+        itemArray = fetchData(with: request)
+    }
+
+    private func fetchData<T>(with request: NSFetchRequest<T>) -> [T] {
         do {
-            itemArray = try coreDataContext.fetch(request)
+            return try coreDataContext.fetch(request)
         } catch {
             print("Error fetching data from context", error)
+            return []
         }
     }
 }
 
+// MARK: Search Bar Methods
+extension TodoListViewController: UISearchBarDelegate {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+
+        if let text = searchBar.text, !text.isEmpty {
+            // Ref: NSPredicate Cheetsheet, NSPredicate from NSHipster
+            let predicate = NSPredicate(format: "title CONTAINS[cd] %@", text)
+            request.predicate = predicate
+
+            let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
+            request.sortDescriptors = [sortDescriptor]
+
+            itemArray = fetchData(with: request)
+
+            tableView.reloadData()
+        }
+    }
+}
