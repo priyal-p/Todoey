@@ -10,7 +10,11 @@ import CoreData
 
 class TodoListViewController: UITableViewController {
 
-    var itemArray: [Item] = []
+    var itemArray: [Item] = [] {
+        didSet {
+            tableView.reloadData()
+        }
+    }
 
     @IBOutlet weak var searchBar: UISearchBar!
 
@@ -130,6 +134,18 @@ class TodoListViewController: UITableViewController {
             return []
         }
     }
+
+    private func dismissSearchBarKeyboard() {
+        DispatchQueue.main.async { [weak self] in
+            self?.searchBar.resignFirstResponder()
+        }
+    }
+}
+
+extension TodoListViewController {
+    override func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        dismissSearchBarKeyboard()
+    }
 }
 
 // MARK: Search Bar Methods
@@ -146,8 +162,13 @@ extension TodoListViewController: UISearchBarDelegate {
             request.sortDescriptors = [sortDescriptor]
 
             itemArray = fetchData(with: request)
+        }
+    }
 
-            tableView.reloadData()
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if let text = searchBar.text, text.isEmpty || text.count == 0 {
+            loadItems()
+            dismissSearchBarKeyboard()
         }
     }
 }
