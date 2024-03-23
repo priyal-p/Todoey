@@ -57,7 +57,13 @@ class TodoListViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print(indexPath.row)
+/*
+ Deleting item from Core Data (order of statements very important
+
+ context.delete(itemArray[indexPath.row])
+ itemArray.remove(at: indexPath.row
+ */
+
         itemArray[indexPath.row].completionStatus.toggle()
 
         // To update UI with updated task appearance.
