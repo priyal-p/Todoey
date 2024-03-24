@@ -16,6 +16,12 @@ class TodoListViewController: UITableViewController {
         }
     }
 
+    var selectedCategory: Category? {
+        didSet {
+            loadItems()
+        }
+    }
+
     @IBOutlet weak var searchBar: UISearchBar!
 
     lazy var coreDataContext: NSManagedObjectContext = {
@@ -31,7 +37,6 @@ class TodoListViewController: UITableViewController {
          /Users/priyalporwal/Library/Developer/CoreSimulator/Devices/4FA3F427-A7D1-4552-B942-E3491BB14A09/data/Containers/Data/Application/4E1D8E45-7F75-4D4D-A36C-59A7029090CA/Library/Application\ Support/DataModel.sqlite
          */
         print("CoreData DB Location", FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-        loadItems()
     }
 
     override func tableView(_ tableView: UITableView, 
@@ -95,6 +100,7 @@ class TodoListViewController: UITableViewController {
             let item = Item(context: self.coreDataContext)
             item.title = text
             item.completionStatus = false
+            item.parentCategory = selectedCategory
 
             self.itemArray.append(item)
 
@@ -123,10 +129,18 @@ class TodoListViewController: UITableViewController {
 
     private func loadItems() {
         let request: NSFetchRequest<Item> = Item.fetchRequest()
-        itemArray = fetchData(with: request)
+
+        if let categoryPredicate = getCategoryPredicate() {
+            itemArray = fetchData(with: request, predicates: [categoryPredicate])
+        } else {
+            print("Please select a parent category.")
+        }
     }
 
-    private func fetchData<T>(with request: NSFetchRequest<T>) -> [T] {
+    private func fetchData<T>(with request: NSFetchRequest<T>,
+                              predicates: [NSPredicate]) -> [T] {
+        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+        request.predicate = compoundPredicate
         do {
             return try coreDataContext.fetch(request)
         } catch {
@@ -154,15 +168,29 @@ extension TodoListViewController: UISearchBarDelegate {
         let request: NSFetchRequest<Item> = Item.fetchRequest()
 
         if let text = searchBar.text, !text.isEmpty {
+            var predicates: [NSPredicate] = []
             // Ref: NSPredicate Cheetsheet, NSPredicate from NSHipster
-            let predicate = NSPredicate(format: "title CONTAINS[cd] %@", text)
-            request.predicate = predicate
+            let searchPredicate = NSPredicate(format: "title CONTAINS[cd] %@", text)
+            predicates.append(searchPredicate)
+
+            if let categoryPredicate = getCategoryPredicate() {
+                predicates.append(categoryPredicate)
+            }
 
             let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
             request.sortDescriptors = [sortDescriptor]
 
-            itemArray = fetchData(with: request)
+            itemArray = fetchData(with: request,
+                                  predicates: predicates)
         }
+    }
+
+    private func getCategoryPredicate() -> NSPredicate? {
+        if let parentCategory = selectedCategory?.name {
+            let predicate = NSPredicate(format: "parentCategory.name MATCHES %@", parentCategory)
+            return predicate
+        }
+        return nil
     }
 
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {

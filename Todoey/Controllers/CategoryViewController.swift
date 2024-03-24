@@ -20,7 +20,7 @@ class CategoryViewController: UITableViewController {
     lazy var coreDataContext: NSManagedObjectContext = {
         return (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     }()
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -52,10 +52,6 @@ class CategoryViewController: UITableViewController {
             print("Error fetching data from context", error)
             return []
         }
-    }
-
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
     }
 
     /*
@@ -153,5 +149,21 @@ extension CategoryViewController {
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         categories.count
+    }
+}
+
+extension CategoryViewController {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        performSegue(withIdentifier: "GoToItems", sender: self)
+
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
+
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "GoToItems",
+           let destinationVC = segue.destination as? TodoListViewController,
+           let indexPath = tableView.indexPathForSelectedRow {
+            destinationVC.selectedCategory = categories[indexPath.row]
+        }
     }
 }
