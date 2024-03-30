@@ -63,20 +63,19 @@ class TodoListViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-/*
- Deleting item from Core Data (order of statements very important
 
- context.delete(itemArray[indexPath.row])
- itemArray.remove(at: indexPath.row
- */
-
-        todoItems?[indexPath.row].completionStatus.toggle()
+        if let item = todoItems?[indexPath.row] {
+            do {
+                try realm.write {
+                    item.completionStatus.toggle()
+                }
+            } catch {
+                print("❌ Error updating item status for category \(self.selectedCategory?.name ?? "")", error.localizedDescription)
+            }
+        }
 
         // To update UI with updated task appearance.
         tableView.reloadData()
-
-        // Update persistence storage with updated item status
-//        save(items: todoItems)
 
         // To get select/deselect appearance
         tableView.deselectRow(at: indexPath, animated: true)
