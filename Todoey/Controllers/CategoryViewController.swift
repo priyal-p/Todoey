@@ -7,9 +7,11 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class CategoryViewController: UITableViewController {
+
+    let realm = try! Realm() // The reason why the initialization throws or can throw an error is because according to Realm, the first time when we are creating a new Realm instance, it can fail if our resources are constrained. But in practice this can only happen the first time a Realm instance is created on a given thread. So here force typecaste is fine and not a code smell.
 
     var categories: [Category] = [] {
         didSet {
@@ -17,9 +19,9 @@ class CategoryViewController: UITableViewController {
         }
     }
     
-    lazy var coreDataContext: NSManagedObjectContext = {
-        return (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-    }()
+//    lazy var coreDataContext: NSManagedObjectContext = {
+//        return (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+//    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,27 +34,29 @@ class CategoryViewController: UITableViewController {
         // self.navigationItem.rightBarButtonItem = self.editButtonItem
     }
 
-    private func saveItems() {
+    private func save(category: Category) {
         do {
-            try coreDataContext.save()
+            try realm.write {
+                realm.add(category)
+            }
         } catch {
             print("❌ Error saving context", error.localizedDescription)
         }
     }
 
     private func loadCategories() {
-        let request: NSFetchRequest<Category> = Category.fetchRequest()
-        categories = fetchData(with: request)
+//        let request: NSFetchRequest<Category> = Category.fetchRequest()
+//        categories = fetchData(with: request)
     }
 
-    private func fetchData<T>(with request: NSFetchRequest<T>) -> [T] {
-        do {
-            return try coreDataContext.fetch(request)
-        } catch {
-            print("Error fetching data from context", error)
-            return []
-        }
-    }
+//    private func fetchData<T>(with request: NSFetchRequest<T>) -> [T] {
+//        do {
+//            return try coreDataContext.fetch(request)
+//        } catch {
+//            print("Error fetching data from context", error)
+//            return []
+//        }
+//    }
 
     /*
     // Override to support conditional editing of the table view.
@@ -112,13 +116,13 @@ extension CategoryViewController {
                   let text = textField.text, !text.isEmpty
             else { return }
 
-            let category = Category(context: self.coreDataContext)
+            let category = Category()
             category.name = text
 
             self.categories.append(category)
 
             // Update persistence storage with new item
-            self.saveItems()
+            self.save(category: category)
 
             self.tableView.reloadData()
         }

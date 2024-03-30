@@ -20,15 +20,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Get file path of Realm DB file.
         print(Realm.Configuration.defaultConfiguration.fileURL)
 
-        let data = Data()
-        data.name = "Priyal"
-        data.age = 10
-
         do {
             let realm = try Realm()
-            try realm.write {
-                realm.add(data)
-            }
         } catch {
             print("Error initialising new realm", error)
         }

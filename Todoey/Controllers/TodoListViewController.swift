@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class TodoListViewController: UITableViewController {
 
@@ -24,9 +24,9 @@ class TodoListViewController: UITableViewController {
 
     @IBOutlet weak var searchBar: UISearchBar!
 
-    lazy var coreDataContext: NSManagedObjectContext = {
-        return (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-    }()
+//    lazy var coreDataContext: NSManagedObjectContext = {
+//        return (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+//    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -82,7 +82,7 @@ class TodoListViewController: UITableViewController {
         tableView.reloadData()
 
         // Update persistence storage with updated item status
-        saveItems()
+        save(items: itemArray)
 
         // To get select/deselect appearance
         tableView.deselectRow(at: indexPath, animated: true)
@@ -97,15 +97,15 @@ class TodoListViewController: UITableViewController {
                   let text = textField.text, !text.isEmpty
             else { return }
 
-            let item = Item(context: self.coreDataContext)
+            let item = Item()
             item.title = text
             item.completionStatus = false
-            item.parentCategory = selectedCategory
+//            item.parentCategory = selectedCategory
 
             self.itemArray.append(item)
 
             // Update persistence storage with new item
-            self.saveItems()
+            self.save(items: itemArray)
 
             self.tableView.reloadData()
         }
@@ -119,35 +119,35 @@ class TodoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
 
-    private func saveItems() {
+    private func save(items: [Item]) {
         do {
-            try coreDataContext.save()
+//            try realm
         } catch {
             print("❌ Error saving context", error.localizedDescription)
         }
     }
 
     private func loadItems() {
-        let request: NSFetchRequest<Item> = Item.fetchRequest()
-
-        if let categoryPredicate = getCategoryPredicate() {
-            itemArray = fetchData(with: request, predicates: [categoryPredicate])
-        } else {
-            print("Please select a parent category.")
-        }
+//        let request: NSFetchRequest<Item> = Item.fetchRequest()
+//
+//        if let categoryPredicate = getCategoryPredicate() {
+//            itemArray = fetchData(with: request, predicates: [categoryPredicate])
+//        } else {
+//            print("Please select a parent category.")
+//        }
     }
 
-    private func fetchData<T>(with request: NSFetchRequest<T>,
-                              predicates: [NSPredicate]) -> [T] {
-        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-        request.predicate = compoundPredicate
-        do {
-            return try coreDataContext.fetch(request)
-        } catch {
-            print("Error fetching data from context", error)
-            return []
-        }
-    }
+//    private func fetchData<T>(with request: NSFetchRequest<T>,
+//                              predicates: [NSPredicate]) -> [T] {
+//        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+//        request.predicate = compoundPredicate
+//        do {
+//            return try coreDataContext.fetch(request)
+//        } catch {
+//            print("Error fetching data from context", error)
+//            return []
+//        }
+//    }
 
     private func dismissSearchBarKeyboard() {
         DispatchQueue.main.async { [weak self] in
@@ -165,24 +165,24 @@ extension TodoListViewController {
 // MARK: Search Bar Methods
 extension TodoListViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        let request: NSFetchRequest<Item> = Item.fetchRequest()
-
-        if let text = searchBar.text, !text.isEmpty {
-            var predicates: [NSPredicate] = []
-            // Ref: NSPredicate Cheetsheet, NSPredicate from NSHipster
-            let searchPredicate = NSPredicate(format: "title CONTAINS[cd] %@", text)
-            predicates.append(searchPredicate)
-
-            if let categoryPredicate = getCategoryPredicate() {
-                predicates.append(categoryPredicate)
-            }
-
-            let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
-            request.sortDescriptors = [sortDescriptor]
-
-            itemArray = fetchData(with: request,
-                                  predicates: predicates)
-        }
+//        let request: NSFetchRequest<Item> = Item.fetchRequest()
+//
+//        if let text = searchBar.text, !text.isEmpty {
+//            var predicates: [NSPredicate] = []
+//            // Ref: NSPredicate Cheetsheet, NSPredicate from NSHipster
+//            let searchPredicate = NSPredicate(format: "title CONTAINS[cd] %@", text)
+//            predicates.append(searchPredicate)
+//
+//            if let categoryPredicate = getCategoryPredicate() {
+//                predicates.append(categoryPredicate)
+//            }
+//
+//            let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
+//            request.sortDescriptors = [sortDescriptor]
+//
+//            itemArray = fetchData(with: request,
+//                                  predicates: predicates)
+//        }
     }
 
     private func getCategoryPredicate() -> NSPredicate? {
