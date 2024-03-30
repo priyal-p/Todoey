@@ -13,15 +13,11 @@ class CategoryViewController: UITableViewController {
 
     let realm = try! Realm() // The reason why the initialization throws or can throw an error is because according to Realm, the first time when we are creating a new Realm instance, it can fail if our resources are constrained. But in practice this can only happen the first time a Realm instance is created on a given thread. So here force typecaste is fine and not a code smell.
 
-    var categories: [Category] = [] {
+    var categories: Results<Category>? {
         didSet {
             tableView.reloadData()
         }
     }
-    
-//    lazy var coreDataContext: NSManagedObjectContext = {
-//        return (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-//    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,63 +41,53 @@ class CategoryViewController: UITableViewController {
     }
 
     private func loadCategories() {
-//        let request: NSFetchRequest<Category> = Category.fetchRequest()
-//        categories = fetchData(with: request)
+        categories = realm.objects(Category.self)
     }
-
-//    private func fetchData<T>(with request: NSFetchRequest<T>) -> [T] {
-//        do {
-//            return try coreDataContext.fetch(request)
-//        } catch {
-//            print("Error fetching data from context", error)
-//            return []
-//        }
-//    }
 
     /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
-    }
-    */
+     // Override to support conditional editing of the table view.
+     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+     // Return false if you do not want the specified item to be editable.
+     return true
+     }
+     */
 
     /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
-    }
-    */
+     // Override to support editing the table view.
+     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+     if editingStyle == .delete {
+     // Delete the row from the data source
+     tableView.deleteRows(at: [indexPath], with: .fade)
+     } else if editingStyle == .insert {
+     // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
+     }
+     }
+     */
 
     /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
+     // Override to support rearranging the table view.
+     override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
 
-    }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
-    }
-    */
+     }
+     */
 
     /*
-    // MARK: - Navigation
+     // Override to support conditional rearranging of the table view.
+     override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
+     // Return false if you do not want the item to be re-orderable.
+     return true
+     }
+     */
 
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
+    /*
+     // MARK: - Navigation
+
+     // In a storyboard-based application, you will often want to do a little preparation before navigation
+     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+     // Get the new view controller using segue.destination.
+     // Pass the selected object to the new view controller.
+     }
+     */
 
 }
 
@@ -119,7 +105,7 @@ extension CategoryViewController {
             let category = Category()
             category.name = text
 
-            self.categories.append(category)
+            // No need to update categories as it is a auto updating caontainer
 
             // Update persistence storage with new item
             self.save(category: category)
@@ -144,7 +130,7 @@ extension CategoryViewController {
 
         // Configure the cell...
         var content = cell.defaultContentConfiguration()
-        content.text = categories[indexPath.row].name
+        content.text = categories?[indexPath.row].name ?? "No categories added yet."
 
         cell.contentConfiguration = content
 
@@ -152,7 +138,7 @@ extension CategoryViewController {
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        categories.count
+        categories?.count ?? 1
     }
 }
 
@@ -167,7 +153,7 @@ extension CategoryViewController {
         if segue.identifier == "GoToItems",
            let destinationVC = segue.destination as? TodoListViewController,
            let indexPath = tableView.indexPathForSelectedRow {
-            destinationVC.selectedCategory = categories[indexPath.row]
+            destinationVC.selectedCategory = categories?[indexPath.row]
         }
     }
 }

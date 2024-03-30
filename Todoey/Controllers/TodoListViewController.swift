@@ -10,7 +10,7 @@ import RealmSwift
 
 class TodoListViewController: UITableViewController {
 
-    var itemArray: [Item] = [] {
+    var todoItems: Results<Item>? {
         didSet {
             tableView.reloadData()
         }
@@ -24,19 +24,13 @@ class TodoListViewController: UITableViewController {
 
     @IBOutlet weak var searchBar: UISearchBar!
 
-//    lazy var coreDataContext: NSManagedObjectContext = {
-//        return (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-//    }()
+    let realm = try! Realm()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
 
         searchBar.delegate = self
-        /*
-         /Users/priyalporwal/Library/Developer/CoreSimulator/Devices/4FA3F427-A7D1-4552-B942-E3491BB14A09/data/Containers/Data/Application/4E1D8E45-7F75-4D4D-A36C-59A7029090CA/Library/Application\ Support/DataModel.sqlite
-         */
-        print("CoreData DB Location", FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
     }
 
     override func tableView(_ tableView: UITableView, 
@@ -45,18 +39,18 @@ class TodoListViewController: UITableViewController {
         var content = cell.defaultContentConfiguration()
 
         // Update checkmark appearance
-        cell.accessoryType = itemArray[indexPath.row].completionStatus ? .checkmark : .none
+        cell.accessoryType = (todoItems?[indexPath.row].completionStatus ?? false) ? .checkmark : .none
 
         // Update text appearance
-        if itemArray[indexPath.row].completionStatus {
+        if todoItems?[indexPath.row].completionStatus ?? false{
             let attributes = [
                 NSAttributedString.Key.strikethroughStyle : 2]
-            content.attributedText = NSAttributedString(string: itemArray[indexPath.row].title ?? "", attributes: attributes)
+            content.attributedText = NSAttributedString(string: todoItems?[indexPath.row].title ?? "", attributes: attributes)
             cell.contentConfiguration = content
         } else {
             let attributes = [
                 NSAttributedString.Key.strikethroughStyle : 0]
-            content.attributedText = NSAttributedString(string: itemArray[indexPath.row].title ?? "", attributes: attributes)
+            content.attributedText = NSAttributedString(string: todoItems?[indexPath.row].title ?? "", attributes: attributes)
         }
 
         cell.contentConfiguration = content
@@ -65,7 +59,7 @@ class TodoListViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        itemArray.count
+        todoItems?.count ?? 0
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -76,13 +70,13 @@ class TodoListViewController: UITableViewController {
  itemArray.remove(at: indexPath.row
  */
 
-        itemArray[indexPath.row].completionStatus.toggle()
+        todoItems?[indexPath.row].completionStatus.toggle()
 
         // To update UI with updated task appearance.
         tableView.reloadData()
 
         // Update persistence storage with updated item status
-        save(items: itemArray)
+//        save(items: todoItems)
 
         // To get select/deselect appearance
         tableView.deselectRow(at: indexPath, animated: true)
@@ -97,15 +91,15 @@ class TodoListViewController: UITableViewController {
                   let text = textField.text, !text.isEmpty
             else { return }
 
-            let item = Item()
-            item.title = text
-            item.completionStatus = false
-//            item.parentCategory = selectedCategory
-
-            self.itemArray.append(item)
-
-            // Update persistence storage with new item
-            self.save(items: itemArray)
+            do {
+                try realm.write {
+                    let item = Item()
+                    item.title = text
+                    self.selectedCategory?.items.append(item)
+                }
+            } catch {
+                print("❌ Error saving items for category \(self.selectedCategory?.name ?? "")", error.localizedDescription)
+            }
 
             self.tableView.reloadData()
         }
@@ -119,35 +113,9 @@ class TodoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
 
-    private func save(items: [Item]) {
-        do {
-//            try realm
-        } catch {
-            print("❌ Error saving context", error.localizedDescription)
-        }
-    }
-
     private func loadItems() {
-//        let request: NSFetchRequest<Item> = Item.fetchRequest()
-//
-//        if let categoryPredicate = getCategoryPredicate() {
-//            itemArray = fetchData(with: request, predicates: [categoryPredicate])
-//        } else {
-//            print("Please select a parent category.")
-//        }
+        todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
     }
-
-//    private func fetchData<T>(with request: NSFetchRequest<T>,
-//                              predicates: [NSPredicate]) -> [T] {
-//        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-//        request.predicate = compoundPredicate
-//        do {
-//            return try coreDataContext.fetch(request)
-//        } catch {
-//            print("Error fetching data from context", error)
-//            return []
-//        }
-//    }
 
     private func dismissSearchBarKeyboard() {
         DispatchQueue.main.async { [weak self] in
