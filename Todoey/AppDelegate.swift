@@ -7,6 +7,7 @@
 
 import UIKit
 import CoreData
+import RealmSwift
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -15,6 +16,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //        print(NSSearchPathForDirectoriesInDomains(.documentDirectory,
 //                                                  .userDomainMask,
 //                                                  true).last ?? "No path found")
+
+        // Get file path of Realm DB file.
+        print(Realm.Configuration.defaultConfiguration.fileURL)
+
+        let data = Data()
+        data.name = "Priyal"
+        data.age = 10
+
+        do {
+            let realm = try Realm()
+            try realm.write {
+                realm.add(data)
+            }
+        } catch {
+            print("Error initialising new realm", error)
+        }
+
+
         return true
     }
 
