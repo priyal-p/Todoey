@@ -67,6 +67,8 @@ class TodoListViewController: UITableViewController {
         if let item = todoItems?[indexPath.row] {
             do {
                 try realm.write {
+                    // Delete item with Realm
+//                    realm.delete(item)
                     item.completionStatus.toggle()
                 }
             } catch {
