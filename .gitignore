@@ -1,0 +1,8 @@
+# OS X Noise
+.DS_Store
+
+# Xcode noise
+xcuserdata
+
+# Build noise
+
