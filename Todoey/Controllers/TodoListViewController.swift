@@ -96,6 +96,7 @@ class TodoListViewController: UITableViewController {
                 try realm.write {
                     let item = Item()
                     item.title = text
+                    item.dateCreated = Date()
                     self.selectedCategory?.items.append(item)
                 }
             } catch {
@@ -134,24 +135,9 @@ extension TodoListViewController {
 // MARK: Search Bar Methods
 extension TodoListViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-//        let request: NSFetchRequest<Item> = Item.fetchRequest()
-//
-//        if let text = searchBar.text, !text.isEmpty {
-//            var predicates: [NSPredicate] = []
-//            // Ref: NSPredicate Cheetsheet, NSPredicate from NSHipster
-//            let searchPredicate = NSPredicate(format: "title CONTAINS[cd] %@", text)
-//            predicates.append(searchPredicate)
-//
-//            if let categoryPredicate = getCategoryPredicate() {
-//                predicates.append(categoryPredicate)
-//            }
-//
-//            let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
-//            request.sortDescriptors = [sortDescriptor]
-//
-//            itemArray = fetchData(with: request,
-//                                  predicates: predicates)
-//        }
+        todoItems = todoItems?
+            .filter("title CONTAINS[cd] %@", searchBar.text)
+            .sorted(byKeyPath: "dateCreated", ascending: true)
     }
 
     private func getCategoryPredicate() -> NSPredicate? {
